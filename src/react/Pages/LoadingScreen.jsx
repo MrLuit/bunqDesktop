@@ -79,31 +79,60 @@ class LoadingScreen extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        const {
-            statusMessage,
-            paymentsLoading,
-            bunqMeTabsLoading,
-            masterCardActionsLoading,
-            requestInquiriesLoading,
-            requestResponsesLoading,
-            registrationLoading
-        } = this.props;
-        const {
-            loadingTypes
-        } = this.state;
-        if(!loadingTypes.secureKey.hasLoaded){
+        const { registrationLoading } = this.props;
+        const loadingTypes = this.state.loadingTypes;
+        let stateChanged = false;
 
+        if (!loadingTypes.secureKey.hasLoaded) {
         }
-        if(!loadingTypes.decryptingData.hasLoaded){
 
+        if (!loadingTypes.decryptingData.hasLoaded) {
         }
-        if(!loadingTypes.fetchingUserInfo.hasLoaded){
 
-        }
-        if(!loadingTypes.loadingStoredData.hasLoaded){
-            if(prevProps.paymentsLoading-){
+        if (!loadingTypes.fetchingUserInfo.hasLoaded) {
+            const wasLoading = prevProps.userLoading;
+            const isLoading = this.props.userLoading;
 
+            if (wasLoading && !isLoading) {
+                stateChanged = true;
+                loadingTypes.fetchingUserInfo.hasLoaded = true;
+                loadingTypes.fetchingUserInfo.loading = false;
             }
+            if (!wasLoading && isLoading) {
+                stateChanged = true;
+                loadingTypes.fetchingUserInfo.loading = true;
+            }
+        }
+
+        if (!loadingTypes.loadingStoredData.hasLoaded) {
+            const wasLoading =
+                prevProps.paymentsLoading ||
+                prevProps.bunqMeTabsLoading ||
+                prevProps.masterCardActionsLoading ||
+                prevProps.requestInquiriesLoading ||
+                prevProps.requestResponsesLoading;
+            const isLoading =
+                this.props.paymentsLoading ||
+                this.props.bunqMeTabsLoading ||
+                this.props.masterCardActionsLoading ||
+                this.props.requestInquiriesLoading ||
+                this.props.requestResponsesLoading;
+
+            if (wasLoading && !isLoading) {
+                stateChanged = true;
+                loadingTypes.loadingStoredData.hasLoaded = true;
+                loadingTypes.loadingStoredData.loading = false;
+            }
+            if (!wasLoading && isLoading) {
+                stateChanged = true;
+                loadingTypes.loadingStoredData.loading = true;
+            }
+        }
+
+        if (stateChanged) {
+            this.setState({
+                loadingTypes: loadingTypes
+            });
         }
     }
 
