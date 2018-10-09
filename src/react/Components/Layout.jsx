@@ -20,6 +20,7 @@ import MainSnackbar from "./MainSnackbar";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import ErrorBoundary from "./ErrorBoundary";
+import LoadingScreen from "./LoadingScreen";
 
 // themes
 import DefaultThemeConfig from "../Themes/DefaultTheme";
@@ -482,6 +483,7 @@ class Layout extends React.Component {
                 <main className={classes.main}>
                     <RuleCollectionChecker updateToggle={isLoading} />
                     <NetworkStatusChecker />
+                    <LoadingScreen />
 
                     <QueueManager BunqJSClient={this.props.BunqJSClient} />
 

@@ -11,6 +11,22 @@
     z-index: 1;
 }
 
+.bunqdesktop-text-wrapper {
+    z-index: 1;
+    position: fixed;
+    right: 30px;
+    bottom: 30px;
+    height: 24px;
+    font-size: 24px;
+    color: #ffffff;
+}
+.bunqdesktop-text-first {
+    font-weight: 700;
+}
+.bunqdesktop-text-second {
+    font-weight: 200;
+}
+
 .login-page,
 .loadingscreen-page,
 .password-page {
@@ -18,22 +34,6 @@
         &:before {
             border-color: grey !important;
         }
-    }
-
-    .bunqdesktop-text-wrapper {
-        z-index: 1;
-        position: fixed;
-        right: 30px;
-        bottom: 30px;
-        height: 24px;
-        font-size: 24px;
-        color: #ffffff;
-    }
-    .bunqdesktop-text-first {
-        font-weight: 700;
-    }
-    .bunqdesktop-text-second {
-        font-weight: 200;
     }
 
     .black-button {

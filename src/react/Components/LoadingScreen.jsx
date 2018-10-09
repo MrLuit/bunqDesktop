@@ -1,11 +1,8 @@
 import React from "react";
 import { translate } from "react-i18next";
 import { connect } from "react-redux";
-import Redirect from "react-router-dom/Redirect";
-import Helmet from "react-helmet";
 import Grid from "@material-ui/core/Grid";
 import Card from "@material-ui/core/Card";
-import Checkbox from "@material-ui/core/Checkbox";
 import CardContent from "@material-ui/core/CardContent";
 import Typography from "@material-ui/core/Typography";
 import CircularProgress from "@material-ui/core/CircularProgress";
@@ -13,8 +10,14 @@ import LinearProgress from "@material-ui/core/LinearProgress";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
+import Dialog from "@material-ui/core/Dialog";
+import Icon from "@material-ui/core/Icon";
 
-import Visibility from "@material-ui/icons/Visibility";
+import CheckIcon from "@material-ui/icons/Check";
+import RemoveIcon from "@material-ui/icons/Remove";
+
+import Fade from "@material-ui/core/Fade";
+const Transition = props => <Fade {...props} />;
 
 const styles = {
     wrapperContainer: {
@@ -45,6 +48,7 @@ class LoadingScreen extends React.Component {
     constructor(props, context) {
         super(props, context);
         this.state = {
+            open: false,
             loadingTypes: {
                 secureKey: {
                     text: "Creating a secure key",
@@ -71,6 +75,9 @@ class LoadingScreen extends React.Component {
     }
 
     componentDidMount() {
+        setTimeout(() => {
+            this.setState({ open: true });
+        }, 1000);
         console.log("Mounted loadingscreen");
     }
 
@@ -138,38 +145,75 @@ class LoadingScreen extends React.Component {
 
     render() {
         const { loadingTypes } = this.state;
-        const {
-            t,
-            statusMessage,
-            paymentsLoading,
-            registrationLoading
-        } = this.props;
+        const { t, statusMessage, registrationLoading } = this.props;
+
+        const loadingCount = Object.keys(loadingTypes).reduce(
+            (accumulator, item) => {
+                return (
+                    accumulator + (loadingTypes[item].loading === true ? 1 : 0)
+                );
+            },
+            0
+        );
+        const finishedCount = Object.keys(loadingTypes).reduce(
+            (accumulator, item) => {
+                return (
+                    accumulator +
+                    (loadingTypes[item].hasLoaded === true &&
+                    loadingTypes[item].loading === false
+                        ? 1
+                        : 0)
+                );
+            },
+            0
+        );
+        const MIN = 0;
+        const MAX = Object.keys(loadingTypes).length;
+        const normalise = value => ((value - MIN) * 100) / (MAX - MIN);
+
+        const normalizedLoadingCount = normalise(loadingCount);
+        const normalizedFinishedCount = normalise(finishedCount);
 
         let cardContent = (
             <CardContent style={styles.cardContent}>
-                <CircularProgress size={50} />
-
                 <Typography variant="subheading" style={styles.text}>
                     {statusMessage}
                 </Typography>
 
-                <LinearProgress variant="determinate" value={23} />
+                <LinearProgress
+                    variant="buffer"
+                    value={normalizedFinishedCount}
+                    valueBuffer={
+                        normalizedFinishedCount + normalizedLoadingCount
+                    }
+                />
 
                 <List style={styles.list} dense={true}>
-                    {loadingTypes.map(loadingType => {
+                    {Object.keys(loadingTypes).map(loadingTypeKey => {
+                        const loadingType = loadingTypes[loadingTypeKey];
+                        let statusComponent = null;
+                        if (loadingType.loading) {
+                            statusComponent = <CircularProgress size={20} />;
+                        } else if (loadingType.hasLoaded === false) {
+                            statusComponent = (
+                                <Icon
+                                    style={styles.checkbox}
+                                    checked={true}
+                                    color="primary"
+                                >
+                                    <CheckIcon />
+                                </Icon>
+                            );
+                        } else {
+                            statusComponent = (
+                                <Icon>
+                                    <RemoveIcon />
+                                </Icon>
+                            );
+                        }
                         return (
                             <ListItem style={styles.listItem} dense={true}>
-                                {loadingType.loading ||
-                                loadingType.hasLoaded === false ? (
-                                    <CircularProgress size={20} />
-                                ) : (
-                                    <Checkbox
-                                        style={styles.checkbox}
-                                        checked={true}
-                                        color="primary"
-                                    />
-                                )}
-
+                                {statusComponent}
                                 <ListItemText
                                     style={styles.text}
                                     primary={loadingType.text}
@@ -182,39 +226,42 @@ class LoadingScreen extends React.Component {
         );
 
         return (
-            <Grid
-                container
-                spacing={16}
-                justify={"center"}
-                alignItems={"center"}
-                style={styles.wrapperContainer}
+            <Dialog
+                fullScreen
+                open={this.state.open}
+                TransitionComponent={Transition}
+                style={{ overflow: "hidden" }}
             >
-                <Helmet>
-                    <title>{`bunqDesktop - ${t("Loading")}`}</title>
-                </Helmet>
-
                 <Grid
-                    item
-                    xs={12}
-                    sm={6}
-                    md={4}
-                    lg={3}
-                    style={{ zIndex: 1 }}
-                    className="login-wrapper"
+                    container
+                    spacing={8}
+                    justify={"center"}
+                    alignItems={"center"}
+                    style={styles.wrapperContainer}
                 >
-                    <Card>{cardContent}</Card>
+                    <Grid
+                        item
+                        xs={12}
+                        sm={6}
+                        md={4}
+                        lg={3}
+                        style={{ zIndex: 1 }}
+                        className="login-wrapper"
+                    >
+                        <Card>{cardContent}</Card>
+                    </Grid>
+
+                    <img
+                        src="./images/svg/login-bg2.svg"
+                        id="login-background-image"
+                    />
+
+                    <span className="bunqdesktop-text-wrapper">
+                        <span className="bunqdesktop-text-first">bunq</span>
+                        <span className="bunqdesktop-text-second">Desktop</span>
+                    </span>
                 </Grid>
-
-                <img
-                    src="./images/svg/login-bg2.svg"
-                    id="login-background-image"
-                />
-
-                <span className="bunqdesktop-text-wrapper">
-                    <span className="bunqdesktop-text-first">bunq</span>
-                    <span className="bunqdesktop-text-second">Desktop</span>
-                </span>
-            </Grid>
+            </Dialog>
         );
     }
 }
@@ -237,8 +284,7 @@ const mapStateToProps = state => {
     };
 };
 
-const mapDispatchToProps = (dispatch, ownProps) => {
-    const { BunqJSClient } = ownProps;
+const mapDispatchToProps = dispatch => {
     return {};
 };
 

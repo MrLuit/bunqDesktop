@@ -7,7 +7,6 @@ import CL from "./Components/CodeSplitting/ComponentLoader";
 
 import Dashboard from "./Pages/Dashboard";
 import NotFound from "./Pages/NotFound";
-import LoadingScreen from "./Pages/LoadingScreen";
 import LoginPassword from "./Pages/LoginPassword";
 import Login from "./Pages/Login/Login";
 
@@ -168,10 +167,6 @@ const standardRoutes = [
         component: CL(() =>
             import(/* webpackChunkName: "disclaimer" */ "./Pages/Disclaimer")
         )
-    },
-    {
-        path: "/loadingscreen",
-        component: LoadingScreen
     },
     {
         path: "/login",
