@@ -1,6 +1,7 @@
 import React from "react";
 import { translate } from "react-i18next";
 import { connect } from "react-redux";
+import Redirect from "react-router-dom/Redirect";
 import Grid from "@material-ui/core/Grid";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
@@ -49,26 +50,19 @@ class LoadingScreen extends React.Component {
         super(props, context);
         this.state = {
             open: false,
+            redirect: false,
             loadingTypes: {
                 secureKey: {
-                    text: "Creating a secure key",
-                    hasLoaded: true,
-                    loading: false
+                    text: "Creating a secure key"
                 },
                 decryptingData: {
-                    text: "Decrypting session data",
-                    hasLoaded: false,
-                    loading: true
+                    text: "Decrypting session data"
                 },
                 fetchingUserInfo: {
-                    text: "Fetching user information",
-                    hasLoaded: true,
-                    loading: true
+                    text: "Fetching user information"
                 },
                 loadingStoredData: {
-                    text: "Loading stored data",
-                    hasLoaded: false,
-                    loading: false
+                    text: "Loading stored data"
                 }
             }
         };
@@ -86,55 +80,9 @@ class LoadingScreen extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        const { registrationLoading } = this.props;
+        const { loadingScreenLoading, loadingScreenHasLoaded } = this.props;
         const loadingTypes = this.state.loadingTypes;
         let stateChanged = false;
-
-        if (!loadingTypes.secureKey.hasLoaded) {
-        }
-
-        if (!loadingTypes.decryptingData.hasLoaded) {
-        }
-
-        if (!loadingTypes.fetchingUserInfo.hasLoaded) {
-            const wasLoading = prevProps.userLoading;
-            const isLoading = this.props.userLoading;
-
-            if (wasLoading && !isLoading) {
-                stateChanged = true;
-                loadingTypes.fetchingUserInfo.hasLoaded = true;
-                loadingTypes.fetchingUserInfo.loading = false;
-            }
-            if (!wasLoading && isLoading) {
-                stateChanged = true;
-                loadingTypes.fetchingUserInfo.loading = true;
-            }
-        }
-
-        if (!loadingTypes.loadingStoredData.hasLoaded) {
-            const wasLoading =
-                prevProps.paymentsLoading ||
-                prevProps.bunqMeTabsLoading ||
-                prevProps.masterCardActionsLoading ||
-                prevProps.requestInquiriesLoading ||
-                prevProps.requestResponsesLoading;
-            const isLoading =
-                this.props.paymentsLoading ||
-                this.props.bunqMeTabsLoading ||
-                this.props.masterCardActionsLoading ||
-                this.props.requestInquiriesLoading ||
-                this.props.requestResponsesLoading;
-
-            if (wasLoading && !isLoading) {
-                stateChanged = true;
-                loadingTypes.loadingStoredData.hasLoaded = true;
-                loadingTypes.loadingStoredData.loading = false;
-            }
-            if (!wasLoading && isLoading) {
-                stateChanged = true;
-                loadingTypes.loadingStoredData.loading = true;
-            }
-        }
 
         if (stateChanged) {
             this.setState({
@@ -144,29 +92,22 @@ class LoadingScreen extends React.Component {
     }
 
     render() {
-        const { loadingTypes } = this.state;
-        const { t, statusMessage, registrationLoading } = this.props;
+        const { redirect, loadingTypes } = this.state;
+        const { t, statusMessage, loadingScreenLoading, loadingScreenHasLoaded } = this.props;
 
-        const loadingCount = Object.keys(loadingTypes).reduce(
-            (accumulator, item) => {
-                return (
-                    accumulator + (loadingTypes[item].loading === true ? 1 : 0)
-                );
-            },
-            0
-        );
-        const finishedCount = Object.keys(loadingTypes).reduce(
-            (accumulator, item) => {
-                return (
-                    accumulator +
-                    (loadingTypes[item].hasLoaded === true &&
-                    loadingTypes[item].loading === false
-                        ? 1
-                        : 0)
-                );
-            },
-            0
-        );
+        if (redirect) return <Redirect to="/" />;
+
+        const loadingCount = Object.keys(loadingTypes).reduce((accumulator, item) => {
+            if (!loadingScreenLoading[item]) return accumulator;
+            return accumulator + 1;
+        }, 0);
+        const finishedCount = Object.keys(loadingTypes).reduce((accumulator, item) => {
+            if (loadingScreenLoading[item]) return accumulator;
+
+            const addedValue = loadingScreenHasLoaded[item] ? 1 : 0;
+            return accumulator + addedValue;
+        }, 0);
+
         const MIN = 0;
         const MAX = Object.keys(loadingTypes).length;
         const normalise = value => ((value - MIN) * 100) / (MAX - MIN);
@@ -183,24 +124,21 @@ class LoadingScreen extends React.Component {
                 <LinearProgress
                     variant="buffer"
                     value={normalizedFinishedCount}
-                    valueBuffer={
-                        normalizedFinishedCount + normalizedLoadingCount
-                    }
+                    valueBuffer={normalizedFinishedCount + normalizedLoadingCount}
                 />
 
                 <List style={styles.list} dense={true}>
                     {Object.keys(loadingTypes).map(loadingTypeKey => {
                         const loadingType = loadingTypes[loadingTypeKey];
+                        const isLoading = !!loadingScreenLoading[loadingTypeKey];
+                        const hasLoaded = !!loadingScreenHasLoaded[loadingTypeKey];
+
                         let statusComponent = null;
-                        if (loadingType.loading) {
+                        if (isLoading) {
                             statusComponent = <CircularProgress size={20} />;
-                        } else if (loadingType.hasLoaded === false) {
+                        } else if (hasLoaded) {
                             statusComponent = (
-                                <Icon
-                                    style={styles.checkbox}
-                                    checked={true}
-                                    color="primary"
-                                >
+                                <Icon style={styles.checkbox} checked={true} color="primary">
                                     <CheckIcon />
                                 </Icon>
                             );
@@ -217,10 +155,7 @@ class LoadingScreen extends React.Component {
                                 <ListItemText
                                     style={styles.text}
                                     primary={
-                                        <Typography
-                                            variant="body2"
-                                            style={styles.text}
-                                        >
+                                        <Typography variant="body2" style={styles.text}>
                                             {loadingType.text}
                                         </Typography>
                                     }
@@ -233,34 +168,13 @@ class LoadingScreen extends React.Component {
         );
 
         return (
-            <Dialog
-                fullScreen
-                open={this.state.open}
-                TransitionComponent={Transition}
-                style={{ overflow: "hidden" }}
-            >
-                <Grid
-                    container
-                    justify={"center"}
-                    alignItems={"center"}
-                    style={styles.wrapperContainer}
-                >
-                    <Grid
-                        item
-                        xs={12}
-                        sm={6}
-                        md={4}
-                        lg={3}
-                        style={{ zIndex: 1 }}
-                        className="login-wrapper"
-                    >
+            <Dialog fullScreen open={this.state.open} TransitionComponent={Transition} style={{ overflow: "hidden" }}>
+                <Grid container justify={"center"} alignItems={"center"} style={styles.wrapperContainer}>
+                    <Grid item xs={12} sm={6} md={4} lg={3} style={{ zIndex: 1 }} className="login-wrapper">
                         <Card>{cardContent}</Card>
                     </Grid>
 
-                    <img
-                        src="./images/svg/login-bg2.svg"
-                        id="login-background-image"
-                    />
+                    <img src="./images/svg/login-bg2.svg" id="login-background-image" />
 
                     <span className="bunqdesktop-text-wrapper">
                         <span className="bunqdesktop-text-first">bunq</span>
@@ -275,6 +189,9 @@ class LoadingScreen extends React.Component {
 const mapStateToProps = state => {
     return {
         statusMessage: state.application.status_message,
+
+        loadingScreenLoading: state.loading_screen.loading,
+        loadingScreenHasLoaded: state.loading_screen.has_loaded,
 
         derivedPassword: state.registration.derivedPassword,
         registrationLoading: state.registration.loading,

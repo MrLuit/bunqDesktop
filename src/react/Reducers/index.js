@@ -17,6 +17,7 @@ import date_filter from "./date_filter";
 import export_new from "./export_new";
 import exports from "./exports";
 import general_filter from "./general_filter";
+import loading_screen from "./loading_screen";
 import modal from "./modal";
 import master_card_actions from "./master_card_actions";
 import master_card_action_info from "./master_card_action_info";
@@ -66,6 +67,7 @@ export default combineReducers({
     export_new,
     exports,
     general_filter,
+    loading_screen,
     modal,
     master_card_actions,
     master_card_action_info,
