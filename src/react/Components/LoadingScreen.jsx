@@ -77,7 +77,7 @@ class LoadingScreen extends React.Component {
     componentDidMount() {
         setTimeout(() => {
             this.setState({ open: true });
-        }, 1000);
+        }, 500);
         console.log("Mounted loadingscreen");
     }
 
@@ -216,7 +216,14 @@ class LoadingScreen extends React.Component {
                                 {statusComponent}
                                 <ListItemText
                                     style={styles.text}
-                                    primary={loadingType.text}
+                                    primary={
+                                        <Typography
+                                            variant="body2"
+                                            style={styles.text}
+                                        >
+                                            {loadingType.text}
+                                        </Typography>
+                                    }
                                 />
                             </ListItem>
                         );
@@ -234,7 +241,6 @@ class LoadingScreen extends React.Component {
             >
                 <Grid
                     container
-                    spacing={8}
                     justify={"center"}
                     alignItems={"center"}
                     style={styles.wrapperContainer}
@@ -270,6 +276,7 @@ const mapStateToProps = state => {
     return {
         statusMessage: state.application.status_message,
 
+        derivedPassword: state.registration.derivedPassword,
         registrationLoading: state.registration.loading,
 
         paymentsLoading: state.payments.loading,
