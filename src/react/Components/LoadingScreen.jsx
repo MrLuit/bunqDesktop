@@ -48,79 +48,45 @@ const styles = {
 class LoadingScreen extends React.Component {
     constructor(props, context) {
         super(props, context);
-        this.state = {
-            open: false,
-            redirect: false,
-            loadingTypes: {
-                secureKey: {
-                    text: "Creating a secure key"
-                },
-                decryptingData: {
-                    text: "Decrypting session data"
-                },
-                fetchingUserInfo: {
-                    text: "Fetching user information"
-                },
-                loadingStoredData: {
-                    text: "Loading stored data"
-                }
-            }
-        };
+        this.state = {};
     }
 
     componentDidMount() {
-        setTimeout(() => {
-            this.setState({ open: true });
-        }, 500);
         console.log("Mounted loadingscreen");
     }
 
-    componentWillUnmount() {
-        console.log("Unmounted loadingscreen");
-    }
-
     componentDidUpdate(prevProps) {
-        const { loadingScreenLoading, loadingScreenHasLoaded } = this.props;
-        const loadingTypes = this.state.loadingTypes;
-        let stateChanged = false;
-
-        if (stateChanged) {
-            this.setState({
-                loadingTypes: loadingTypes
-            });
-        }
+        // const { loadingScreenTypes, loadingScreenLoading, loadingScreenHasLoaded } = this.props;
+        // let stateChanged = false;
+        //
+        // if (stateChanged) {
+        // }
     }
 
     render() {
-        const { redirect, loadingTypes } = this.state;
-        const { t, statusMessage, loadingScreenLoading, loadingScreenHasLoaded } = this.props;
+        const { t, loadingScreenTypes, loadingScreenLoading, loadingScreenHasLoaded } = this.props;
+        const loadingTypes = Object.keys(loadingScreenTypes);
 
-        if (redirect) return <Redirect to="/" />;
-
-        const loadingCount = Object.keys(loadingTypes).reduce((accumulator, item) => {
+        const loadingCount = loadingTypes.reduce((accumulator, item) => {
             if (!loadingScreenLoading[item]) return accumulator;
             return accumulator + 1;
         }, 0);
-        const finishedCount = Object.keys(loadingTypes).reduce((accumulator, item) => {
+        const finishedCount = loadingTypes.reduce((accumulator, item) => {
             if (loadingScreenLoading[item]) return accumulator;
 
             const addedValue = loadingScreenHasLoaded[item] ? 1 : 0;
             return accumulator + addedValue;
         }, 0);
 
+        // calculate normalized values for the amount of items that are loading/finished
         const MIN = 0;
-        const MAX = Object.keys(loadingTypes).length;
+        const MAX = loadingTypes.length;
         const normalise = value => ((value - MIN) * 100) / (MAX - MIN);
-
         const normalizedLoadingCount = normalise(loadingCount);
         const normalizedFinishedCount = normalise(finishedCount);
 
         let cardContent = (
             <CardContent style={styles.cardContent}>
-                <Typography variant="subheading" style={styles.text}>
-                    {statusMessage}
-                </Typography>
-
                 <LinearProgress
                     variant="buffer"
                     value={normalizedFinishedCount}
@@ -128,8 +94,8 @@ class LoadingScreen extends React.Component {
                 />
 
                 <List style={styles.list} dense={true}>
-                    {Object.keys(loadingTypes).map(loadingTypeKey => {
-                        const loadingType = loadingTypes[loadingTypeKey];
+                    {loadingTypes.map(loadingTypeKey => {
+                        const loadingType = loadingScreenTypes[loadingTypeKey];
                         const isLoading = !!loadingScreenLoading[loadingTypeKey];
                         const hasLoaded = !!loadingScreenHasLoaded[loadingTypeKey];
 
@@ -152,11 +118,12 @@ class LoadingScreen extends React.Component {
                         return (
                             <ListItem style={styles.listItem} dense={true}>
                                 {statusComponent}
+
                                 <ListItemText
                                     style={styles.text}
                                     primary={
                                         <Typography variant="body2" style={styles.text}>
-                                            {loadingType.text}
+                                            {t(loadingType)}
                                         </Typography>
                                     }
                                 />
@@ -168,7 +135,7 @@ class LoadingScreen extends React.Component {
         );
 
         return (
-            <Dialog fullScreen open={this.state.open} TransitionComponent={Transition} style={{ overflow: "hidden" }}>
+            <Dialog fullScreen TransitionComponent={Transition} open={loadingTypes.length > 0}>
                 <Grid container justify={"center"} alignItems={"center"} style={styles.wrapperContainer}>
                     <Grid item xs={12} sm={6} md={4} lg={3} style={{ zIndex: 1 }} className="login-wrapper">
                         <Card>{cardContent}</Card>
@@ -188,8 +155,7 @@ class LoadingScreen extends React.Component {
 
 const mapStateToProps = state => {
     return {
-        statusMessage: state.application.status_message,
-
+        loadingScreenTypes: state.loading_screen.types,
         loadingScreenLoading: state.loading_screen.loading,
         loadingScreenHasLoaded: state.loading_screen.has_loaded,
 

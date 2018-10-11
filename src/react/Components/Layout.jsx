@@ -40,22 +40,22 @@ import { openSnackbar } from "../Actions/snackbar";
 import { loadStoredPayments } from "../Actions/payments";
 import { loadStoredAccounts } from "../Actions/accounts";
 import { loadStoredBunqMeTabs } from "../Actions/bunq_me_tabs";
-import { applicationSetStatus } from "../Actions/application.js";
 import { loadStoredMasterCardActions } from "../Actions/master_card_actions";
 import { loadStoredRequestInquiries } from "../Actions/request_inquiries";
 import { loadStoredrequestInquiryBatches } from "../Actions/request_inquiry_batches";
 import { loadStoredRequestResponses } from "../Actions/request_responses";
+import { setHideBalance, setTheme, setAutomaticThemeChange } from "../Actions/options";
+import { loadStoredContacts } from "../Actions/contacts";
+import { loadStoredShareInviteBankResponses } from "../Actions/share_invite_bank_responses";
+import { loadStoredShareInviteBankInquiries } from "../Actions/share_invite_bank_inquiries";
+import { queueStartSync } from "../Actions/queue";
+import { loadingScreenHasLoaded, loadingScreenSetLoading, loadingScreenSetType } from "../Actions/loading_screen";
 import {
     registrationClearUserInfo,
     registrationLoading,
     registrationNotLoading,
     registrationResetToApiScreenSoft
 } from "../Actions/registration";
-import { setHideBalance, setTheme, setAutomaticThemeChange } from "../Actions/options";
-import { loadStoredContacts } from "../Actions/contacts";
-import { loadStoredShareInviteBankResponses } from "../Actions/share_invite_bank_responses";
-import { loadStoredShareInviteBankInquiries } from "../Actions/share_invite_bank_inquiries";
-import { queueStartSync } from "../Actions/queue";
 
 const styles = theme => ({
     contentContainer: {
@@ -78,6 +78,11 @@ const styles = theme => ({
         textAlign: "left"
     }
 });
+
+const registerEncryptionKeys = "registerEncryptionKeys";
+const installDevice = "installDevice";
+const createApiSession = "createApiSession";
+const checkStoredData = "checkStoredData";
 
 class Layout extends React.Component {
     constructor(props, context) {
@@ -270,6 +275,7 @@ class Layout extends React.Component {
                 })
                 .catch(setupError => {
                     Logger.error(setupError);
+                    console.error(setupError);
                     // installation failed so we reset the api key
                     nextProps.registrationResetToApiScreenSoft();
                     nextProps.registrationNotLoading();
@@ -299,10 +305,6 @@ class Layout extends React.Component {
         const errorTitle = t("Something went wrong");
         const error1 = t("We failed to setup bunqDesktop properly");
 
-        const statusMessage1 = t("Registering our encryption keys");
-        const statusMessage2 = t("Installing this device");
-        const statusMessage3 = t("Creating a new session");
-
         try {
             await this.props.BunqJSClient.run(apiKey, permittedIps, environment, encryptionKey);
         } catch (exception) {
@@ -315,23 +317,30 @@ class Layout extends React.Component {
             return;
         }
 
-        this.props.applicationSetStatus(statusMessage1);
+        this.props.loadingScreenSetType(registerEncryptionKeys, "Registering our encryption keys");
+        this.props.loadingScreenSetType(installDevice, "Installing this device");
+        this.props.loadingScreenSetType(createApiSession, "Creating a new session");
+        this.props.loadingScreenSetType(checkStoredData, "Checking for stored data");
+
+        this.props.loadingScreenSetLoading(registerEncryptionKeys);
         try {
             await this.props.BunqJSClient.install();
         } catch (exception) {
             this.props.BunqErrorHandler(exception, false, this.props.BunqJSClient);
             throw exception;
         }
+        this.props.loadingScreenHasLoaded(registerEncryptionKeys);
 
-        this.props.applicationSetStatus(statusMessage2);
+        this.props.loadingScreenSetLoading(installDevice);
         try {
             await this.props.BunqJSClient.registerDevice(deviceName);
         } catch (exception) {
             this.props.BunqErrorHandler(exception, false, this.props.BunqJSClient);
             throw exception;
         }
+        this.props.loadingScreenHasLoaded(installDevice);
 
-        this.props.applicationSetStatus(statusMessage3);
+        this.props.loadingScreenSetLoading(createApiSession);
         try {
             await this.props.BunqJSClient.registerSession();
         } catch (exception) {
@@ -366,7 +375,9 @@ class Layout extends React.Component {
             }
             throw exception;
         }
+        this.props.loadingScreenHasLoaded(createApiSession);
 
+        this.props.loadingScreenSetLoading(checkStoredData);
         this.props.loadStoredAccounts();
         this.props.loadStoredContacts();
         this.props.loadStoredPayments();
@@ -378,8 +389,11 @@ class Layout extends React.Component {
         this.props.loadStoredShareInviteBankResponses();
         this.props.loadStoredShareInviteBankInquiries();
 
+        setTimeout(() => {
+            this.props.loadingScreenHasLoaded(checkStoredData);
+        }, 300);
+
         // setup finished with no errors
-        this.props.applicationSetStatus("");
         this.props.usersUpdate(true);
     };
 
@@ -507,6 +521,8 @@ const mapStateToProps = state => {
     };
 };
 
+loadingScreenHasLoaded, loadingScreenSetLoading, loadingScreenSetType;
+
 const mapDispatchToProps = (dispatch, ownProps) => {
     const { BunqJSClient } = ownProps;
     return {
@@ -519,9 +535,6 @@ const mapDispatchToProps = (dispatch, ownProps) => {
         setHideBalance: hideBalance => dispatch(setHideBalance(hideBalance)),
         setTheme: theme => dispatch(setTheme(theme)),
 
-        // set the current application status
-        applicationSetStatus: status_message => dispatch(applicationSetStatus(status_message)),
-
         registrationLoading: () => dispatch(registrationLoading()),
         registrationNotLoading: () => dispatch(registrationNotLoading()),
         registrationResetToApiScreenSoft: () => dispatch(registrationResetToApiScreenSoft(BunqJSClient)),
@@ -531,8 +544,15 @@ const mapDispatchToProps = (dispatch, ownProps) => {
         // login the user with a specific type from the list
         userLogin: (userType, updated = false) => dispatch(userLogin(BunqJSClient, userType, updated)),
 
+        // force starts a background sync
         queueStartSync: () => dispatch(queueStartSync()),
 
+        // loading screen status handling
+        loadingScreenSetLoading: type => dispatch(loadingScreenSetLoading(type)),
+        loadingScreenHasLoaded: type => dispatch(loadingScreenHasLoaded(type)),
+        loadingScreenSetType: (type, text) => dispatch(loadingScreenSetType(type, text)),
+
+        // load stored data
         loadStoredPayments: () => dispatch(loadStoredPayments(BunqJSClient)),
         loadStoredContacts: () => dispatch(loadStoredContacts(BunqJSClient)),
         loadStoredBunqMeTabs: () => dispatch(loadStoredBunqMeTabs(BunqJSClient)),

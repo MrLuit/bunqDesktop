@@ -1,4 +1,5 @@
 export const defaultState = {
+    types: {},
     has_loaded: {},
     loading: {}
 };
@@ -23,17 +24,24 @@ export default (state = defaultState, action) => {
                 ...state,
                 loading: isNotLoading
             };
-        case "LOADING_SCREEN_SET_HAS_LOADED":
-            const hasLoaded = {
-                ...state.has_loaded,
-                [action.payload.type]: true
+
+        case "LOADING_SCREEN_SET_TYPE":
+            const types = {
+                ...state.types,
+                [action.payload.type]: action.payload.text
             };
             return {
                 ...state,
-                has_loaded: hasLoaded
+                types: types
             };
-        case "LOADING_SCREEN_SET_HAS_NOT_LOADED":
-            const hasNotLoaded = {
+        case "LOADING_SCREEN_CLEAR_TYPES":
+            return {
+                ...state,
+                types: {}
+            };
+
+        case "LOADING_SCREEN_HAS_LOADED":
+            const hasLoaded = {
                 ...state.has_loaded,
                 [action.payload.type]: true
             };
@@ -43,8 +51,17 @@ export default (state = defaultState, action) => {
             };
             return {
                 ...state,
-                has_loaded: hasNotLoaded,
+                has_loaded: hasLoaded,
                 loading: isNotLoadingSecondary
+            };
+        case "LOADING_SCREEN_HAS_NOT_LOADED":
+            const hasNotLoaded = {
+                ...state.has_loaded,
+                [action.payload.type]: false
+            };
+            return {
+                ...state,
+                has_loaded: hasNotLoaded
             };
     }
     return state;

@@ -59,7 +59,7 @@ const styles = {
     text: {
         color: "#000000"
     },
-    subHeading: {
+    subtitle1: {
         color: "#000000",
         marginBottom: 20
     }
@@ -255,7 +255,7 @@ class OAuthManagement extends React.Component {
             </Grid>
         ) : (
             <Grid item xs={12}>
-                <TranslateTypography variant="subtitle1" style={styles.subHeading}>
+                <TranslateTypography variant="subtitle1" style={styles.subtitle1}>
                     Login with limited permissions using OAuth
                 </TranslateTypography>
 

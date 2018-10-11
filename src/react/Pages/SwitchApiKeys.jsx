@@ -132,18 +132,11 @@ class SwitchApiKeys extends React.Component {
 
 const mapStateToProps = state => {
     return {
-        status_message: state.application.status_message,
-
         derivedPassword: state.registration.derivedPassword,
         passwordIdentifier: state.registration.identifier,
         registrationLoading: state.registration.loading,
         storedApiKeys: state.registration.stored_api_keys,
-        apiKey: state.registration.api_key,
-
-        users: state.users.users,
-        user: state.user.user,
-        userType: state.user.user_type,
-        userLoading: state.user.loading
+        apiKey: state.registration.api_key
     };
 };
 

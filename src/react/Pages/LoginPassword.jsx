@@ -222,6 +222,7 @@ class LoginPassword extends React.Component {
 
         let cardContent = registrationLoading ? (
             <CardContent style={styles.cardContent}>
+                Passworrrddddddddddd
                 <Typography variant="h5" component="h2">
                     Loading
                 </Typography>
