@@ -37,7 +37,7 @@ export default (state = defaultState, action) => {
         case "LOADING_SCREEN_CLEAR_TYPES":
             return {
                 ...state,
-                types: {}
+                ...defaultState
             };
 
         case "LOADING_SCREEN_HAS_LOADED":

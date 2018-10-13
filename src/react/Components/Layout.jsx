@@ -49,7 +49,15 @@ import { loadStoredContacts } from "../Actions/contacts";
 import { loadStoredShareInviteBankResponses } from "../Actions/share_invite_bank_responses";
 import { loadStoredShareInviteBankInquiries } from "../Actions/share_invite_bank_inquiries";
 import { queueStartSync } from "../Actions/queue";
-import { loadingScreenHasLoaded, loadingScreenSetLoading, loadingScreenSetType } from "../Actions/loading_screen";
+import {
+    registerEncryptionKeys,
+    installDevice,
+    createApiSession,
+    checkStoredData,
+    loadingScreenHasLoaded,
+    loadingScreenSetLoading,
+    loadingScreenSetType
+} from "../Actions/loading_screen";
 import {
     registrationClearUserInfo,
     registrationLoading,
@@ -78,11 +86,6 @@ const styles = theme => ({
         textAlign: "left"
     }
 });
-
-const registerEncryptionKeys = "registerEncryptionKeys";
-const installDevice = "installDevice";
-const createApiSession = "createApiSession";
-const checkStoredData = "checkStoredData";
 
 class Layout extends React.Component {
     constructor(props, context) {
@@ -316,11 +319,6 @@ class Layout extends React.Component {
             // no api key yet so nothing else to do just yet
             return;
         }
-
-        this.props.loadingScreenSetType(registerEncryptionKeys, "Registering our encryption keys");
-        this.props.loadingScreenSetType(installDevice, "Installing this device");
-        this.props.loadingScreenSetType(createApiSession, "Creating a new session");
-        this.props.loadingScreenSetType(checkStoredData, "Checking for stored data");
 
         this.props.loadingScreenSetLoading(registerEncryptionKeys);
         try {

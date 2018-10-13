@@ -1,7 +1,6 @@
 import React from "react";
 import { translate } from "react-i18next";
 import { connect } from "react-redux";
-import Redirect from "react-router-dom/Redirect";
 import Grid from "@material-ui/core/Grid";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
@@ -19,6 +18,15 @@ import RemoveIcon from "@material-ui/icons/Remove";
 
 import Fade from "@material-ui/core/Fade";
 const Transition = props => <Fade {...props} />;
+
+import {
+    checkStoredData,
+    createApiSession,
+    installDevice,
+    registerEncryptionKeys,
+    loadingScreenClearTypes,
+    loadingScreenSetType
+} from "../Actions/loading_screen";
 
 const styles = {
     wrapperContainer: {
@@ -53,14 +61,30 @@ class LoadingScreen extends React.Component {
 
     componentDidMount() {
         console.log("Mounted loadingscreen");
+
+        this.props.loadingScreenSetType(registerEncryptionKeys, "Registering our encryption keys");
+        this.props.loadingScreenSetType(installDevice, "Installing this device");
+        this.props.loadingScreenSetType(createApiSession, "Creating a new session");
+        this.props.loadingScreenSetType(checkStoredData, "Checking for stored data");
     }
 
     componentDidUpdate(prevProps) {
-        // const { loadingScreenTypes, loadingScreenLoading, loadingScreenHasLoaded } = this.props;
-        // let stateChanged = false;
-        //
-        // if (stateChanged) {
-        // }
+        const { loadingScreenTypes, loadingScreenLoading, loadingScreenHasLoaded } = this.props;
+
+        const loadingScreenTypeKeys = Object.keys(loadingScreenTypes);
+        if (loadingScreenTypeKeys.length > 0) {
+            const isFinished = loadingScreenTypeKeys.every(loadingScreenType => {
+                if (loadingScreenLoading[loadingScreenType]) {
+                    return false;
+                }
+                return loadingScreenHasLoaded[loadingScreenType];
+            });
+
+            if (isFinished) {
+                console.log("is finished!");
+                this.props.loadingScreenClearTypes();
+            }
+        }
     }
 
     render() {
@@ -80,8 +104,8 @@ class LoadingScreen extends React.Component {
 
         // calculate normalized values for the amount of items that are loading/finished
         const MIN = 0;
-        const MAX = loadingTypes.length;
-        const normalise = value => ((value - MIN) * 100) / (MAX - MIN);
+        const loadingTypesCount = loadingTypes.length;
+        const normalise = value => ((value - MIN) * 100) / (loadingTypesCount - MIN);
         const normalizedLoadingCount = normalise(loadingCount);
         const normalizedFinishedCount = normalise(finishedCount);
 
@@ -134,8 +158,10 @@ class LoadingScreen extends React.Component {
             </CardContent>
         );
 
+        const show = loadingTypesCount > 0 && loadingCount > 0;
+
         return (
-            <Dialog fullScreen TransitionComponent={Transition} open={loadingTypes.length > 0}>
+            <Dialog fullScreen TransitionComponent={Transition} open={show}>
                 <Grid container justify={"center"} alignItems={"center"} style={styles.wrapperContainer}>
                     <Grid item xs={12} sm={6} md={4} lg={3} style={{ zIndex: 1 }} className="login-wrapper">
                         <Card>{cardContent}</Card>
@@ -175,7 +201,10 @@ const mapStateToProps = state => {
 };
 
 const mapDispatchToProps = dispatch => {
-    return {};
+    return {
+        loadingScreenSetType: type => dispatch(loadingScreenSetType(type)),
+        loadingScreenClearTypes: () => dispatch(loadingScreenClearTypes())
+    };
 };
 
 export default connect(
